@@ -20,15 +20,12 @@ public class BraceExpander {
         return result;
     }
 
-    private static void expandHelper(Sequence inputNodes, String accum, List<String> result) {
-        if (inputNodes.size() == 0) {
+    private static void expandHelper(Sequence nodes, String accum, List<String> result) {
+        if (nodes.size() == 0) {
             result.add(accum);
         } else {
-            Sequence nodes = new Sequence();
-            nodes.addAll(inputNodes);
-            ParseNode first = nodes.removeFirst();
-            for (String var : variations(first)) {
-                 expandHelper(nodes, accum + var, result);
+            for (String var : variations(nodes.car())) {
+                 expandHelper(nodes.cdr(), accum + var, result);
             }
         }
     }

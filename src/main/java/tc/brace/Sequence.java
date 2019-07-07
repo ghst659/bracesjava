@@ -5,21 +5,43 @@ import java.util.LinkedList;
 /**
  * A sequence of substrings
  */
-class Sequence extends LinkedList<ParseNode> {
+class Sequence {
+    Sequence() {
+        // do nothing
+    }
+
+    Sequence(Sequence original) {
+        rep.addAll(original.rep);
+    }
+
+    ParseNode car() {
+        return rep.getFirst();
+    }
+
+    Sequence cdr() {
+        Sequence result = new Sequence(this);
+        result.rep.removeFirst();
+        return result;
+    }
+
+    int size() {
+        return rep.size();
+    }
+
     /**
      * Adds a character to the sequence.
      * @param ch the character to be added.
      */
     void addChar(Character ch) {
         ParseNode token;
-        if (this.size() == 0) {
+        if (rep.size() == 0) {
             token = new ParseNode();
-            this.add(token);
+            rep.add(token);
         } else {
-            token = this.getLast();
+            token = rep.getLast();
             if (! token.isAtom()) {
                 token = new ParseNode();
-                this.add(token);
+                rep.add(token);
             }
         }
         token.addChar(ch);
@@ -30,6 +52,8 @@ class Sequence extends LinkedList<ParseNode> {
      * @param choice the choice to be added.
      */
     void addChoice(ParseNode choice) {
-        this.add(choice);
+        rep.add(choice);
     }
+
+    private LinkedList<ParseNode> rep = new LinkedList<>();
 }
