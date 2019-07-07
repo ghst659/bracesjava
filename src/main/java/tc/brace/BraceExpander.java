@@ -14,17 +14,17 @@ public class BraceExpander {
      * @return A list of strings.
      */
     public static List<String> expand(String pattern) {
-        LinkedList<ParseNode> parseNodes = ParseNode.parse(pattern);
+        Sequence parseNodes = ParseNode.parse(pattern);
         List<String> result = new LinkedList<>();
         expandHelper(parseNodes, "", result);
         return result;
     }
 
-    private static void expandHelper(LinkedList<ParseNode> inputNodes, String accum, List<String> result) {
+    private static void expandHelper(Sequence inputNodes, String accum, List<String> result) {
         if (inputNodes.size() == 0) {
             result.add(accum);
         } else {
-            LinkedList<ParseNode> nodes = new LinkedList<>();
+            Sequence nodes = new Sequence();
             nodes.addAll(inputNodes);
             ParseNode first = nodes.removeFirst();
             for (String var : variations(first)) {
@@ -38,7 +38,7 @@ public class BraceExpander {
         if (node.isAtom()) {
             result.add(node.getAtom().toString());
         } else {
-            for (LinkedList<ParseNode> choice: node.getChoices()) {
+            for (Sequence choice: node.getChoices()) {
                 expandHelper(choice, "", result);
             }
         }

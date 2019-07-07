@@ -8,18 +8,18 @@ import java.util.List;
 /**
  * A node in the parse tree for a brace expansion pattern.
  */
-public class ParseNode {
+class ParseNode {
     /**
      * Parses the PATTERN into a collection of CharSequences,
-     * @param pattern
-     * @return
+     * @param pattern a string to be expanded.
+     * @return the parsed sequence.
      */
-    public static LinkedList<ParseNode> parse(CharSequence pattern) throws RuntimeException {
-        LinkedList<ParseNode> result = new LinkedList<>();
+    static Sequence parse(CharSequence pattern) throws RuntimeException {
+        Sequence result = new Sequence();
         int L = pattern.length();
         if (L > 0) {
             Deque<StackNode> stack = new LinkedList<>();
-            LinkedList<ParseNode> currentSequence = result;
+            Sequence currentSequence = result;
             ParseNode currentChoice = null;
             for (int i = 0; i < L; ++i) {
                 Character ch = pattern.charAt(i);
@@ -27,13 +27,13 @@ public class ParseNode {
                     case '{':
                         stack.push(new StackNode(currentSequence, currentChoice));
                         currentChoice = new ParseNode();
-                        currentSequence.add(currentChoice);
+                        currentSequence.addChoice(currentChoice);
                         // Start a new sequence one level down.
-                        currentSequence = new LinkedList<>();
+                        currentSequence = new Sequence();
                         currentChoice.addSequence(currentSequence);
                         break;
                     case '}':
-                        if (stack.size() < 0) {
+                        if (stack.size() < 1) {
                             throw new RuntimeException("invalid close-brace");
                         }
                         StackNode n = stack.pop();
@@ -42,40 +42,25 @@ public class ParseNode {
                         break;
                     case ',':
                         if (currentChoice == null) {
-                            addCharToSequence(currentSequence, ch);
+                            currentSequence.addChar(ch);
                         } else {
-                            currentSequence = new LinkedList<>();
+                            currentSequence = new Sequence();
                             currentChoice.addSequence(currentSequence);
                         }
                         break;
                     default:
-                        addCharToSequence(currentSequence, ch);
+                        currentSequence.addChar(ch);
                         break;
                 }
             }
         }
         return result;
     }
-    private static void addCharToSequence(LinkedList<ParseNode> sequence, Character ch) {
-        ParseNode token = null;
-        if (sequence.size() == 0) {
-            token = new ParseNode();
-            sequence.add(token);
-        } else {
-            token = sequence.getLast();
-            if (! token.isAtom()) {
-                token = new ParseNode();
-                sequence.add(token);
-            }
-        }
-        token.addChar(ch);
-    }
-
     /**
      * Returns the choices represented by this ParseNode.
      * @return a List of LinkedList of ParsxeNodes.
      */
-    public List<LinkedList<ParseNode>> getChoices() {
+    List<Sequence> getChoices() {
         return choices;
     }
 
@@ -83,7 +68,7 @@ public class ParseNode {
      * Returns the atom value of this ParseNOde
      * @return returns the atom StringBuffer.
      */
-    public StringBuffer getAtom() {
+    StringBuffer getAtom() {
         return atom;
     }
 
@@ -91,7 +76,7 @@ public class ParseNode {
      * Tests if this ParseNode is an Atom and not a Choice.
      * @return true if the ParseNode is an Atom.
      */
-    public boolean isAtom() {
+    boolean isAtom() {
         return choices == null;
     }
 
@@ -99,7 +84,7 @@ public class ParseNode {
      * Adds a character to the atom value of this ParseNode.
      * @param ch the character to add to the ParseNode.
      */
-    public void addChar(Character ch) {
+    void addChar(Character ch) {
         if (atom == null) {
             atom = new StringBuffer();
         }
@@ -107,10 +92,10 @@ public class ParseNode {
     }
 
     /**
-     * Adds a sequence to this PraseNode.
+     * Adds a sequence to this ParseNode.
      * @param seq the sequence to be added.
      */
-    public void addSequence(LinkedList<ParseNode> seq) {
+    private void addSequence(Sequence seq) {
         assert atom == null;
         if (choices == null) {
             choices = new LinkedList<>();
@@ -118,15 +103,6 @@ public class ParseNode {
         choices.add(seq);
     }
 
-    /**
-     * The string representation fo this ParseNode.
-     * @return the string representation of the ParseNode.
-     */
-    @Override
-    public String toString() {
-        return String.format("%s|%s", atom == null ? "-" : atom,
-                choices == null ? "-" : choices);
-    }
-    private List<LinkedList<ParseNode>> choices = null;
+    private List<Sequence> choices = null;
     private StringBuffer atom = null;
 }
