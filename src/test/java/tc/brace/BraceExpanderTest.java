@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,16 +15,22 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 public class BraceExpanderTest {
 
-    @Test public void testExcept() {
+    @ParameterizedTest
+    @ValueSource(strings={"foo}", "{foo", "{{x,y}", "foo\\"})
+    public void testExcept(String pattern) {
         Assertions.assertThrows(java.lang.RuntimeException.class,
                 () -> {
-                    List<String> notUsed = BraceExpander.expand("foo}");
+                    List<String> notUsed = BraceExpander.expand(pattern);
                 });
     }
 
     public static Stream<Arguments> dataProvider() {
         return Stream.of(
                 arguments("", List.of("")),
+                arguments("foo\\}", List.of("foo}")),
+                arguments("\\{foo\\}", List.of("{foo}")),
+                arguments("\\{foo\\,bar\\}", List.of("{foo,bar}")),
+                arguments("bar\\\\ba\\{rf", List.of("bar\\ba{rf")),
                 arguments("abc", List.of("abc")),
                 arguments("a,c", List.of("a,c")),
                 arguments("{xy}", List.of("xy")),
@@ -38,7 +45,7 @@ public class BraceExpanderTest {
 
     @ParameterizedTest
     @MethodSource("dataProvider")
-    public void check(String pattern, List<String> expected) {
+    public void testBraceExpander(String pattern, List<String> expected) {
         List<String> found = BraceExpander.expand(pattern);
         String msg = String.format("Pattern: \"%s\"", pattern);
         Assertions.assertEquals(expected, found, msg);

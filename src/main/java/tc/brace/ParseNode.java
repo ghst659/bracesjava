@@ -21,8 +21,14 @@ class ParseNode {
             Deque<StackNode> stack = new LinkedList<>();
             Sequence currentSequence = result;
             ParseNode currentChoice = null;
+            boolean literal = false;
             for (int i = 0; i < L; ++i) {
                 Character ch = pattern.charAt(i);
+                if (literal) {
+                    currentSequence.addChar(ch);
+                    literal = false;
+                    continue;
+                }
                 switch (ch) {
                     case '{':
                         stack.push(new StackNode(currentSequence, currentChoice));
@@ -33,7 +39,7 @@ class ParseNode {
                         currentChoice.addSequence(currentSequence);
                         break;
                     case '}':
-                        if (stack.size() < 1) {
+                        if (stack.isEmpty()) {
                             throw new RuntimeException("invalid close-brace");
                         }
                         StackNode n = stack.pop();
@@ -48,10 +54,19 @@ class ParseNode {
                             currentChoice.addSequence(currentSequence);
                         }
                         break;
+                    case '\\':
+                        literal = true;
+                        continue;
                     default:
                         currentSequence.addChar(ch);
                         break;
                 }
+            }
+            if (literal) {
+                throw new RuntimeException("character required after escape");
+            }
+            if (!stack.isEmpty()) {
+                throw new RuntimeException("unbalanced braces");
             }
         }
         return result;
