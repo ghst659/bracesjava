@@ -24,8 +24,9 @@ public class BraceExpander {
         if (nodes.size() == 0) {
             result.add(accum);
         } else {
+            Sequence remainder = nodes.cdr();
             for (String var : variations(nodes.car())) {
-                 expandHelper(nodes.cdr(), accum + var, result);
+                 expandHelper(remainder, accum + var, result);
             }
         }
     }
